@@ -33,7 +33,7 @@ const ProjectGrid = ({ project }) => {
   const router = useRouter();
   // handleClick to view project single page
   const handleClick = (project) => {
-    router.push(`/analytics/edit-project`);
+    // router.push(`/analytics/edit-project`);
   };
 
   return (

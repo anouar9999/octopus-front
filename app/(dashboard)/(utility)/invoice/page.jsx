@@ -55,7 +55,7 @@ const InvoicePage = () => {
       name: "edit",
       icon: "heroicons:pencil-square",
       doit: (id) => {
-        router.push("/invoice-edit");
+        // router.push("/invoice-edit");
       },
     },
     {

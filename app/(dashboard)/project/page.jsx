@@ -1,4 +1,4 @@
-"use client";
+
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 
@@ -11,9 +11,7 @@ import "./styles.css";
 import Comments from "@/components/partials/comments";
 import Gallery from "@/components/partials/gallery";
 import Link from "next/link";
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+
 const buttons = [
   {
     title: "Reparage",

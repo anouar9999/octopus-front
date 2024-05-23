@@ -17,8 +17,8 @@ const Logo = () => {
             <img
               src={
                 isDark
-                  ? "/assets/images/logo.jpg"
-                  : "/assets/images/logo.jpg"
+                  ? "/assets/images/logo.png"
+                  : "/assets/images/logo.png"
               }
               alt=""
               width={70}
@@ -28,8 +28,8 @@ const Logo = () => {
             <img
               src={
                 isDark
-                  ? "/assets/images/logo.jpg"
-                  : "/assets/images/logo.jpg"
+                  ? "/assets/images/logo.png"
+                  : "/assets/images/logo.png"
               }
               alt=""
               width={70}

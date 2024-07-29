@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from "react";
-import Select, { components } from "react-select";
+import Select from "react-select";
 import Modal from "@/components/ui/Modal";
 import { useSelector, useDispatch } from "react-redux";
-import { editTodo, closeEditModal } from "./store";
+import { closeEditModal } from "./store";
 import Icon from "@/components/ui/Icon";
-import Textarea from "@/components/ui/Textarea";
-import Flatpickr from "react-flatpickr";
+import Textinput from "@/components/ui/Textinput";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const FormValidationSchema = yup
   .object({
     title: yup.string().required("Title is required"),
-    assign: yup.mixed().required("Assignee is required"),
-    tags: yup.mixed().required("Tag is required"),
+    category: yup.mixed().required("Category is required"),
   })
   .required();
 
@@ -37,76 +36,17 @@ const styles = {
   }),
 };
 
-const assigneeOptions = [
-  {
-    value: "mahedi",
-    label: "Mahedi Amin",
-    image: "/assets/images/avatar/av-1.svg",
-  },
-  {
-    value: "sovo",
-    label: "Sovo Haldar",
-    image: "/assets/images/avatar/av-2.svg",
-  },
-  {
-    value: "rakibul",
-    label: "Rakibul Islam",
-    image: "/assets/images/avatar/av-3.svg",
-  },
-  {
-    value: "pritom",
-    label: "Pritom Miha",
-    image: "/assets/images/avatar/av-4.svg",
-  },
-];
 const options = [
-  {
-    value: "team",
-    label: "team",
-  },
-  {
-    value: "low",
-    label: "low",
-  },
-  {
-    value: "medium",
-    label: "medium",
-  },
-  {
-    value: "high",
-    label: "high",
-  },
-  {
-    value: "update",
-    label: "update",
-  },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "update", label: "Update" },
 ];
 
-const OptionComponent = ({ data, ...props }) => {
-  //const Icon = data.icon;
-
-  return (
-    <components.Option {...props}>
-      <span className="flex items-center space-x-4">
-        <div className="flex-none">
-          <div className="h-7 w-7 rounded-full">
-            <img
-              src={data.image}
-              alt=""
-              className="w-full h-full rounded-full"
-            />
-          </div>
-        </div>
-        <span className="flex-1">{data.label}</span>
-      </span>
-    </components.Option>
-  );
-};
-
-const EditTodoModal = () => {
-  const { editModal, editItem } = useSelector((state) => state.todo);
+const EditTodoModal = ({ id }) => {
+  const { editModal, editItem, taskId } = useSelector((state) => state.todo);
   const dispatch = useDispatch();
-
+  
   const {
     register,
     control,
@@ -115,34 +55,42 @@ const EditTodoModal = () => {
     handleSubmit,
   } = useForm({
     resolver: yupResolver(FormValidationSchema),
-
     mode: "all",
+    defaultValues: editItem // Set default values
   });
 
   useEffect(() => {
     reset(editItem);
   }, [editItem]);
 
-  const onSubmit = (data) => {
-    dispatch(
-      editTodo({
-        id: editItem.id,
+  const onSubmit = async (data) => {
+    console.log(data);
+    try {
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/`, {
         title: data.title,
-        image: data.assign,
-        category: data.tags,
-      })
-    );
-    dispatch(closeEditModal(false));
-    toast.info("Edit Successfully", {
-      position: "top-right",
-      autoClose: 1500,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
-    });
+        category: data.category.value,
+        project_id: id,
+      });
+      console.log('Task updated:', response.data);
+      dispatch(closeEditModal(false));
+      toast.info("Edit Successfully", {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating task:', error.response ? error.response.data : error.message);
+      throw error;
+    }
   };
 
   return (
@@ -151,17 +99,19 @@ const EditTodoModal = () => {
       activeModal={editModal}
       onClose={() => dispatch(closeEditModal(false))}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
-        <div className={`fromGroup  ${errors.title ? "has-error" : ""}`}>
-          <div className=" relative">
-            <input
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className={`fromGroup ${errors.title ? "has-error" : ""}`}>
+          <div className="relative">
+            <Textinput
               type="text"
-              defaultValue={editItem.title}
-              {...register("title")}
+              label="Title"
+              register={register("title", {
+                required: "Project name is required",
+              })}
               className="form-control py-2"
             />
             {errors.title && (
-              <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2  space-x-1 rtl:space-x-reverse">
+              <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2 space-x-1 rtl:space-x-reverse">
                 <span className="text-danger-500">
                   <Icon icon="heroicons-outline:information-circle" />
                 </span>
@@ -170,77 +120,42 @@ const EditTodoModal = () => {
           </div>
           {errors.title && (
             <div className="mt-2 text-danger-500 block text-sm">
-              {errors.title?.message}
+              {errors.title.message}
             </div>
           )}
         </div>
 
-        <div className={errors.assign ? "has-error" : ""}>
-          <label className="form-label" htmlFor="icon_s">
-            Assignee
+        <div className={`fromGroup ${errors.category ? "has-error" : ""}`}>
+          <label className="form-label" htmlFor="category-select">
+            Select Category
           </label>
           <Controller
-            name="assign"
-            control={control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                options={assigneeOptions}
-                styles={styles}
-                className="react-select"
-                classNamePrefix="select"
-                isSearchable={false}
-                defaultValue={editItem.image}
-                isMulti
-                components={{
-                  Option: OptionComponent,
-                }}
-                id="icon_s"
-              />
-            )}
-          />
-          {errors.assign && (
-            <div className=" mt-2  text-danger-500 block text-sm">
-              {errors.assign?.message || errors.assign?.label.message}
-            </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="default-picker" className=" form-label">
-            Due Date
-          </label>
-          <Flatpickr className="form-control py-2" id="default-picker" />
-        </div>
-        <div className={errors.tags ? "has-error" : ""}>
-          <label className="form-label" htmlFor="icon_s">
-            Tag
-          </label>
-          <Controller
-            name="tags"
+            name="category"
             control={control}
             render={({ field }) => (
               <Select
                 {...field}
                 options={options}
-                styles={styles}
+                styles={{
+                  menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                }}
+                value={field.value ? options.find(option => option.value === field.value) : null}
+                onChange={(selectedOption) => field.onChange(selectedOption)}
                 className="react-select"
-                defaultValue={editItem.category}
                 classNamePrefix="select"
-                isMulti
-                id="icon_s"
+                id="category-select"
               />
             )}
           />
-          {errors.assign && (
-            <div className=" mt-2  text-danger-500 block text-sm">
-              {errors.tags?.message || errors.tags?.label.message}
+          {errors.category && (
+            <div className="mt-2 text-danger-500 block text-sm">
+              {errors.category.message}
             </div>
           )}
         </div>
-        <Textarea label="Description" placeholder="Description" />
 
         <div className="ltr:text-right rtl:text-left">
-          <button className="btn btn-dark  text-center">Update</button>
+          <button className="btn btn-dark text-center">Update</button>
         </div>
       </form>
     </Modal>

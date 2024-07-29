@@ -1,6 +1,8 @@
+import { decription, title } from "@/constant/data";
+
 export const metadata = {
-  title: 'Dashcode Next Js',
-  description: 'Dashcode is a popular dashboard template.',
+  title: title,
+  description: decription ,
 }
 
 const layout = ({ children }) => {

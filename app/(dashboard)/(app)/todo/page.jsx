@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   openAddModal,
   setFilter,
+  setTodos,
   setSearch,
   toggleMobileTodoSidebar,
 } from "@/components/partials/app/todo/store";
@@ -24,6 +25,7 @@ import Badge from "@/components/ui/Badge";
 import TodoHeader from "@/components/partials/app/todo/TodoHeader";
 import useWidth from "@/hooks/useWidth";
 import { isAdmin } from "@/constant/data";
+import axios from "axios";
 
 const topfilterList = [
   {
@@ -31,20 +33,16 @@ const topfilterList = [
     name: "My Task",
     icon: "uil:image-v",
   },
-  
+
   {
     value: "done",
     name: "Completed",
     icon: "heroicons:document-check",
   },
-
 ];
 
 const bottomfilterList = [
-  {
-    name: "Team",
-    value: "team",
-  },
+  
   {
     name: "low",
     value: "low",
@@ -63,12 +61,37 @@ const bottomfilterList = [
   },
 ];
 
-const TodoPage = () => {
+const TodoPage = ({ id }) => {
+  const [Tasks, setTasks] = useState([]);
+
   const { todos, editModal, filter, todoSearch, mobileTodoSidebar } =
     useSelector((state) => state.todo);
   const { width, breakpoints } = useWidth();
-  const dispatch = useDispatch();
+  const userData = useSelector((state) => state.auth.userData);
 
+  const dispatch = useDispatch();
+  const isAdmin = userData?.user?.is_admin || false;
+    const fetchTodos = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/tasks/`
+      );
+      console.log("Todos fetched:", response.data);
+      setTasks(response.data);
+      dispatch(setTodos(response.data));
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching todos:",
+        error.response ? error.response.data : error.message
+      );
+      throw error;
+    }
+  };
+  useEffect(() => {
+    fetchTodos(id);
+  }, []);
   const [isLoading, setLoading] = useState(false);
 
   const filteredTodos = todos
@@ -86,17 +109,15 @@ const TodoPage = () => {
       } else if (filter === "fav") {
         return todo.isfav;
       } else if (filter === "done") {
-        return todo.isDone;
-      } else if (filter === "team") {
-        return todo.category.some((cat) => cat.value === "team");
+        return todo.is_done;
       } else if (filter === "low") {
-        return todo.category.some((cat) => cat.value === "low");
+        return todo.category === "low";
       } else if (filter === "medium") {
-        return todo.category.some((cat) => cat.value === "medium");
+        return todo.category === "medium";
       } else if (filter === "high") {
-        return todo.category.some((cat) => cat.value === "high");
+        return todo.category === "high";
       } else if (filter === "update") {
-        return todo.category.some((cat) => cat.value === "update");
+        return todo.category === "update";
       }
     });
 
@@ -121,7 +142,7 @@ const TodoPage = () => {
     <>
       <ToastContainer />
 
-      <div className="flex md:space-x-5 app_height overflow-hidden relative rtl:space-x-reverse">
+      <div className="flex md:space-x-5 app_height overflow-hidden relative p-3 rtl:space-x-reverse">
         <div
           className={`transition-all duration-150 flex-none min-w-[260px] 
         ${
@@ -137,19 +158,21 @@ const TodoPage = () => {
         `}
         >
           <Card
-            bodyClass=" py-6 h-full flex flex-col"
+            bodyClass=" h-full flex flex-col"
             className="h-full bg-white"
           >
-        {
-          isAdmin &&     <div className="flex-1 h-full px-6">
-          <Button
-            icon="heroicons-outline:plus"
-            text="Add Task"
-            className="btn-dark w-full block  "
-            onClick={() => dispatch(openAddModal(true))}
-          />
-        </div>
-        }
+            {isAdmin && (
+              <div className="flex-1 h-full py-2 px-6">
+                <Button
+                  icon="heroicons-outline:plus"
+                  text="Add Task"
+                  className="btn-dark w-full block  "
+                  onClick={() =>
+                    dispatch(openAddModal({ open: true, projectId: id }))
+                  }
+                />
+              </div>
+            )}
 
             <SimpleBar className="h-full px-6 ">
               <ul className="list mt-6">
@@ -162,24 +185,22 @@ const TodoPage = () => {
                   />
                 ))}
               </ul>
-             
-             {
-              isAdmin && <div>
-                 <div className="block py-4 text-slate-800 dark:text-slate-400 font-semibold text-xs uppercase">
-                Tags
-              </div>
-                 <ul>
-              {bottomfilterList.map((item, i) => (
-                <BottomFilter
-                  filter={filter}
-                  item={item}
-                  key={i}
-                  onClick={() => handleFilter(item.value)}
-                />
-              ))}
-            </ul>
-              </div>
-             }
+
+              <div>
+                  <div className="block py-4 text-slate-800 dark:text-slate-400 font-semibold text-xs uppercase">
+                  Priority
+                  </div>
+                  <ul>
+                    {bottomfilterList.map((item, i) => (
+                      <BottomFilter
+                        filter={filter}
+                        item={item}
+                        key={i}
+                        onClick={() => handleFilter(item.value)}
+                      />
+                    ))}
+                  </ul>
+                </div>
             </SimpleBar>
           </Card>
         </div>
@@ -204,7 +225,7 @@ const TodoPage = () => {
               {!isLoading && (
                 <ul className="divide-y divide-slate-100 dark:divide-slate-700 -mb-6 h-full">
                   {filteredTodos.map((todo, i) => (
-                    <Todos key={i} todo={todo} />
+                    <Todos key={i} todo={todo} projectId={id} />
                   ))}
                   {filteredTodos.length === 0 && (
                     <li className="mx-6 mt-6">
@@ -221,7 +242,7 @@ const TodoPage = () => {
         </div>
       </div>
       <AddTodo />
-      <EditTodoModal />
+      <EditTodoModal id={id} />
     </>
   );
 };

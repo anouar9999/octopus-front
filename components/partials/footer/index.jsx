@@ -17,8 +17,16 @@ const Footer = ({ className = "custom-class" }) => {
     <footer className={className + " " + footerclassName()}>
       <div className="site-footer px-6 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 py-4">
         <div className="grid md:grid-cols-2 grid-cols-1 md:gap-5">
-          <div className="text-start ltr:md:text-start rtl:md:text-start text-sm">
-             © 2024 Project Management System. All Rights Reserved.
+          <div className="flex   text-start ltr:md:text-start rtl:md:text-start text-sm">
+          <a className="flex-shrink-0">
+        <img
+          src={"/assets/images/logo.png"}
+          alt="Company Logo"
+          width={20} // reduced width
+          height={20} // reduced height
+          className="object-contain mx-2"
+        />
+      </a> 2024 Project Management System. All Rights Reserved.
           </div>
           
         </div>

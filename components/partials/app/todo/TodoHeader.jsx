@@ -52,7 +52,7 @@ const TodoHeader = ({ onChange }) => {
           </div>
         </div>
       </div>
-      <div className="md:block hidden">
+      {/* <div className="md:block hidden">
         <Dropdown
           classMenuItems="w-[130px]"
           label={
@@ -77,7 +77,7 @@ const TodoHeader = ({ onChange }) => {
             </Menu.Item>
           ))}
         </Dropdown>
-      </div>
+      </div> */}
     </div>
   );
 };

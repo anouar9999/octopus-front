@@ -7,8 +7,10 @@ export const appProjectSlice = createSlice({
   name: "approject",
   initialState: {
     openProjectModal: false,
+    openUploadImageModal:false,
     isLoading: null,
     editItem: {},
+    companyID:null,
     editModal: false,
     projects: [
       {
@@ -79,6 +81,9 @@ export const appProjectSlice = createSlice({
     ],
   },
   reducers: {
+    toggleUploadImageModal: (state, action) => {
+      state.openUploadImageModal = action.payload;
+    },
     toggleAddModal: (state, action) => {
       state.openProjectModal = action.payload;
     },
@@ -136,6 +141,10 @@ export const appProjectSlice = createSlice({
         category: action.payload.category,
       });
     },
+    ChangecompanyID:(state, action)=>{
+      state.companyID = action.payload;
+
+    }
   },
 });
 
@@ -145,6 +154,6 @@ export const {
   toggleAddModal,
   removeProject,
   toggleEditModal,
-  updateProject,
+  updateProject,openUploadImageModal,toggleUploadImageModal,companyID,ChangecompanyID
 } = appProjectSlice.actions;
 export default appProjectSlice.reducer;

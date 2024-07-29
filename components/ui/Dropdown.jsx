@@ -1,5 +1,5 @@
 import { Menu, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment } from "react";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 
@@ -25,6 +25,7 @@ const Dropdown = ({
   ],
   classItem = "px-4 py-2",
   className = "",
+  dropdownZIndex = 9999, // Set default z-index value
 }) => {
   return (
     <div className={`relative ${wrapperClass}`}>
@@ -43,72 +44,76 @@ const Dropdown = ({
           leaveTo="transform opacity-0 scale-95"
         >
           <Menu.Items
-            className={`absolute ltr:right-0 rtl:left-0 origin-top-right  border border-slate-100
-            rounded bg-white dark:bg-slate-800 dark:border-slate-700 shadow-dropdown z-[9999]
+            className={`absolute ${
+              dropdownZIndex ? `z-${dropdownZIndex}` : "" // Apply custom z-index value if provided
+            } ltr:right-0 rtl:left-0 origin-top-right  border border-slate-100
+            rounded bg-white dark:bg-slate-800 dark:border-slate-700 shadow-dropdown
             ${classMenuItems}
             `}
           >
             <div>
-              {children
-                ? children
-                : items?.map((item, index) => (
-                    <Menu.Item key={index}>
-                      {({ active }) => (
-                        <div
-                          className={`${
-                            active
-                              ? "bg-slate-100 text-slate-900 dark:bg-slate-600 dark:text-slate-300 dark:bg-opacity-50"
-                              : "text-slate-600 dark:text-slate-300"
-                          } block     ${
-                            item.hasDivider
-                              ? "border-t border-slate-100 dark:border-slate-700"
-                              : ""
-                          }`}
-                        >
-                          {item.link ? (
-                            <Link
-                              href={item.link}
-                              className={`block ${classItem}`}
-                            >
-                              {item.icon ? (
-                                <div className="flex items-center">
-                                  <span className="block text-xl ltr:mr-3 rtl:ml-3">
-                                    <Icon icon={item.icon} />
-                                  </span>
-                                  <span className="block text-sm">
-                                    {item.label}
-                                  </span>
-                                </div>
-                              ) : (
+              {children ? (
+                children
+              ) : (
+                items?.map((item, index) => (
+                  <Menu.Item key={index}>
+                    {({ active }) => (
+                      <div
+                        className={`${
+                          active
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-600 dark:text-slate-300 dark:bg-opacity-50"
+                            : "text-slate-600 dark:text-slate-300"
+                        } block     ${
+                          item.hasDivider
+                            ? "border-t border-slate-100 dark:border-slate-700"
+                            : ""
+                        }`}
+                      >
+                        {item.link ? (
+                          <Link
+                            href={item.link}
+                            className={`block ${classItem}`}
+                          >
+                            {item.icon ? (
+                              <div className="flex items-center">
+                                <span className="block text-xl ltr:mr-3 rtl:ml-3">
+                                  <Icon icon={item.icon} />
+                                </span>
                                 <span className="block text-sm">
                                   {item.label}
                                 </span>
-                              )}
-                            </Link>
-                          ) : (
-                            <div
-                              className={`block cursor-pointer ${classItem}`}
-                            >
-                              {item.icon ? (
-                                <div className="flex items-center">
-                                  <span className="block text-xl ltr:mr-3 rtl:ml-3">
-                                    <Icon icon={item.icon} />
-                                  </span>
-                                  <span className="block text-sm">
-                                    {item.label}
-                                  </span>
-                                </div>
-                              ) : (
+                              </div>
+                            ) : (
+                              <span className="block text-sm">
+                                {item.label}
+                              </span>
+                            )}
+                          </Link>
+                        ) : (
+                          <div
+                            className={`block cursor-pointer ${classItem}`}
+                          >
+                            {item.icon ? (
+                              <div className="flex items-center">
+                                <span className="block text-xl ltr:mr-3 rtl:ml-3">
+                                  <Icon icon={item.icon} />
+                                </span>
                                 <span className="block text-sm">
                                   {item.label}
                                 </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Menu.Item>
-                  ))}
+                              </div>
+                            ) : (
+                              <span className="block text-sm">
+                                {item.label}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Menu.Item>
+                ))
+              )}
             </div>
           </Menu.Items>
         </Transition>

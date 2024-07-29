@@ -14,17 +14,17 @@ const Login = () => {
         <div className="lg-inner-column">
           <div className="left-column relative z-[1]">
             <div className="max-w-[520px] pt-20 ltr:pl-20 rtl:pr-20">
-              {/* <Link href="/">
+              <Link href="/">
                 <img
                   src={
                     isDark
-                      ? "/assets/images/logo/logo-white.svg"
-                      : "/assets/images/logo/logo.svg"
+                      ? "/assets/images/logo.png"
+                      : "/assets/images/logo.png"
                   }
                   alt=""
-                  className="mb-10"
+                  className="mb-10 w-14"
                 />
-              </Link> */}
+              </Link>
               <h4 >
                 Unlock your Project{" "}
                 <span className="text-slate-800 dark:text-slate-400 font-bold ">
@@ -48,11 +48,11 @@ const Login = () => {
                     <img
                       src={
                         isDark
-                          ? "/assets/images/logo/logo-white.svg"
-                          : "/assets/images/logo/logo.svg"
+                          ? "/assets/images/logo.png"
+                          : "/assets/images/logo.png"
                       }
                       alt=""
-                      className="mx-auto"
+                      className="mx-auto w-20"
                     />
                   </Link>
                 </div>

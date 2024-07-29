@@ -1,10 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 
 const initialUsers = () => {
   if (typeof window !== "undefined") {
-    const item = window?.localStorage.getItem("users");
+    const item = window.localStorage.getItem("users");
     return item
       ? JSON.parse(item)
       : [
@@ -20,14 +21,13 @@ const initialUsers = () => {
             email: "admin@gmail.com",
             password: "admin",
           },
-
-        ];  
+        ];
   }
   return [
     {
       id: uuidv4(),
       name: "dashcode",
-      email: "admin@gmail.com",
+      email: "dashcode@gmail.com",
       password: "dashcode",
     },
     {
@@ -38,22 +38,42 @@ const initialUsers = () => {
     },
   ];
 };
-// save users in local storage
 
 const initialIsAuth = () => {
   if (typeof window !== "undefined") {
-    const item = window?.localStorage.getItem("isAuth");
+    const item = window.localStorage.getItem("isAuth");
     return item ? JSON.parse(item) : false;
   }
   return false;
 };
 
+const initialUserData = () => {
+  if (typeof window !== "undefined") {
+    const item = window.localStorage.getItem("userData");
+    return item ? JSON.parse(item) : { user: null, companies: [] };
+  }
+  return { user: null, companies: [] };
+};
+
+export const loginUser = createAsyncThunk(
+  "auth/loginUser",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, data);
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || "Invalid credentials";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
     users: initialUsers(),
-    isAuth: true,
-    userData: null, 
+    isAuth: initialIsAuth(),
+    userData: initialUserData(),
   },
   reducers: {
     handleRegister: (state, action) => {
@@ -78,7 +98,7 @@ export const authSlice = createSlice({
           password,
         });
         if (typeof window !== "undefined") {
-          window?.localStorage.setItem("users", JSON.stringify(state.users));
+          window.localStorage.setItem("users", JSON.stringify(state.users));
         }
         toast.success("User registered successfully", {
           position: "top-right",
@@ -92,17 +112,26 @@ export const authSlice = createSlice({
         });
       }
     },
-
-    handleLogin: (state, action) => {
-      state.isAuth = action.payload;
-    
-      if (state.isAuth) {
-        // User logged in successfully
-        state.userData = action.payload.userData; 
-        console.log('state.userData')
-        console.log(state.userData)
+    handleLogout: (state) => {
+      state.isAuth = false;
+      state.userData = { user: null, companies: [] };
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("isAuth");
+        window.localStorage.removeItem("userData");
+      }
+      toast.success("User logged out successfully", {
+        position: "top-right",
+      });
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isAuth = true;
+        state.userData = action.payload;
         if (typeof window !== "undefined") {
-          window?.localStorage.setItem("isAuth", JSON.stringify(state.isAuth));
+          window.localStorage.setItem("isAuth", JSON.stringify(state.isAuth));
+          window.localStorage.setItem("userData", JSON.stringify(state.userData));
         }
         toast.success("User logged in successfully", {
           position: "top-right",
@@ -114,9 +143,11 @@ export const authSlice = createSlice({
           progress: undefined,
           theme: "light",
         });
-      } else if (action.payload === false) {
-        // Login failed
-        toast.error("Invalid credentials", {
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isAuth = false;
+        state.userData = { user: null, companies: [] };
+        toast.error(action.payload, {
           position: "top-right",
           autoClose: 1500,
           hideProgressBar: false,
@@ -126,21 +157,9 @@ export const authSlice = createSlice({
           progress: undefined,
           theme: "light",
         });
-      }
-    },
-    
-    handleLogout: (state, action) => {
-      state.isAuth = action.payload;
-      // remove isAuth from local storage
-      if (typeof window !== "undefined") {
-        window?.localStorage.removeItem("isAuth");
-      }
-      toast.success("User logged out successfully", {
-        position: "top-right",
       });
-    },
   },
 });
 
-export const { handleRegister, handleLogin, handleLogout } = authSlice.actions;
+export const { handleRegister, handleLogout } = authSlice.actions;
 export default authSlice.reducer;

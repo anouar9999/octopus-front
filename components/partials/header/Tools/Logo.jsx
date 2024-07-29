@@ -1,43 +1,57 @@
-"use client";
-
-import React, { Fragment } from "react";
+import React, { useEffect, useState } from "react";
 import useDarkMode from "@/hooks/useDarkMode";
-import Link from "next/link";
-import useWidth from "@/hooks/useWidth";
+import { useSelector } from "react-redux";
 
 const Logo = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const [isDark] = useDarkMode();
-  const { width, breakpoints } = useWidth();
+  const userData = useSelector((state) => state.auth.userData);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null; // Avoid rendering during hydration
+  }
+
+  const logoSrc = isDark ? "/assets/images/logo.png" : "/assets/images/logo.png";
+  const companyLogoSrc =
+    userData?.companies?.[0]?.CompanyImage
+      ? `${process.env.NEXT_PUBLIC_API_URL}/${userData.companies[0].CompanyImage}`
+      : "/assets/images/default-company-logo.png";
 
   return (
-    <div>
-      <Link href="/analytics">
-        <React.Fragment>
-          {width >= breakpoints.xl ? (
+    <div className="flex items-center">
+      {/* First logo */}
+     
+
+      {/* "X" */}
+      {userData?.user?.is_admin ? (
+        <div> <a className="flex-shrink-0">
+        <img
+          src={logoSrc}
+          alt="Company Logo"
+          width={56} // reduced width
+          height={80} // reduced height
+          className="object-contain"
+        />
+      </a></div>
+      ) : (
+        <>
+
+          {/* Second logo */}
+          <a className="flex-shrink-0 w-32">
             <img
-              src={
-                isDark
-                  ? "/assets/images/logo.png"
-                  : "/assets/images/logo.png"
-              }
-              alt=""
-              width={70}
-              height={60}
+              src={companyLogoSrc}
+              alt="User Company Logo"
+              width={120} // reduced width
+              height={120} // reduced height
+              className="object-contain"
             />
-          ) : (
-            <img
-              src={
-                isDark
-                  ? "/assets/images/logo.png"
-                  : "/assets/images/logo.png"
-              }
-              alt=""
-              width={70}
-              height={60}
-            />
-          )}
-        </React.Fragment>
-      </Link>
+          </a>
+        </>
+      )}
     </div>
   );
 };

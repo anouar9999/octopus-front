@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Select, { components } from "react-select";
 import Modal from "@/components/ui/Modal";
 import { useSelector, useDispatch } from "react-redux";
-import { openAddModal, addTodo } from "./store";
+import { openAddModal, fetchTodos } from "./store";
 import Textinput from "@/components/ui/Textinput";
 import Textarea from "@/components/ui/Textarea";
 import Flatpickr from "react-flatpickr";
@@ -10,6 +10,8 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const FormValidationSchema = yup
   .object({
@@ -60,10 +62,7 @@ const assigneeOptions = [
   },
 ];
 const options = [
-  {
-    value: "team",
-    label: "team",
-  },
+ 
   {
     value: "low",
     label: "low",
@@ -76,10 +75,7 @@ const options = [
     value: "high",
     label: "high",
   },
-  {
-    value: "update",
-    label: "update",
-  },
+  
 ];
 
 const OptionComponent = ({ data, ...props }) => {
@@ -104,7 +100,7 @@ const OptionComponent = ({ data, ...props }) => {
 };
 
 const AddTodo = () => {
-  const { addModal } = useSelector((state) => state.todo);
+  const { addModal, projectId } = useSelector((state) => state.todo);
   const dispatch = useDispatch();
 
   const {
@@ -112,27 +108,51 @@ const AddTodo = () => {
     control,
     formState: { errors },
     handleSubmit,
-  } = useForm({
-    resolver: yupResolver(FormValidationSchema),
-    mode: "all",
-  });
+  } = useForm();
 
-  const onSubmit = (data) => {
-    dispatch(
-      addTodo({
-        id: uuidv4(),
-        isDone: false,
-        isfave: false,
-        image: data.assign,
-        title: data.title,
-        category: data.tags,
-      })
-    );
+  const onSubmit = async (data) => {
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("category", data.category.label);
+    formData.append("project_id", projectId);
 
-    dispatch(openAddModal(false));
-    data.title = "";
-    data.tags = "";
-    data.assign = "";
+    try {
+      // Send a POST request to create a new task
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/tasks/`,
+        formData
+      );
+      console.log("Task created:", response.data);
+      // Optionally, you can redirect or show a success message here
+      dispatch(openAddModal({ open: false, id: projectId }));
+      toast.success("Task create successfully", {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      setTimeout(() => {
+    window.location.reload()
+      }, 1500);
+      return response.data;
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("somethig Wrong", {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      throw error;
+    }
   };
   return (
     <div>
@@ -140,7 +160,7 @@ const AddTodo = () => {
         title="Add Task"
         labelclassName="btn-outline-dark"
         activeModal={addModal}
-        onClose={() => dispatch(openAddModal(false))}
+        onClose={() =>  dispatch(openAddModal({ open: false, id: projectId }))}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
           <Textinput
@@ -148,48 +168,18 @@ const AddTodo = () => {
             label="title"
             type="text"
             placeholder="Enter title"
-            register={register}
+            register={register("title", {
+              required: "Project name is required",
+            })}
             error={errors.title}
           />
-          <div className={errors.assign ? "has-error" : ""}>
-            <label className="form-label" htmlFor="icon_s">
-              Assignee
-            </label>
-            <Controller
-              name="assign"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  options={assigneeOptions}
-                  styles={styles}
-                  className="react-select"
-                  classNamePrefix="select"
-                  isMulti
-                  components={{
-                    Option: OptionComponent,
-                  }}
-                  id="icon_s"
-                />
-              )}
-            />
-            {errors.assign && (
-              <div className=" mt-2  text-danger-500 block text-sm">
-                {errors.assign?.message || errors.assign?.label.message}
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="default-picker" className=" form-label">
-              Due Date
-            </label>
-          </div>
+
           <div className={errors.tags ? "has-error" : ""}>
             <label className="form-label" htmlFor="icon_s">
-              Tag
-            </label>
+            priority        
+                </label>
             <Controller
-              name="tags"
+              name="category"
               control={control}
               render={({ field }) => (
                 <Select
@@ -198,7 +188,6 @@ const AddTodo = () => {
                   styles={styles}
                   className="react-select"
                   classNamePrefix="select"
-                  isMulti
                   id="icon_s"
                 />
               )}
@@ -209,7 +198,12 @@ const AddTodo = () => {
               </div>
             )}
           </div>
-          <Textarea label="Description" placeholder="Description" />
+          <div className="pt-12">
+
+          </div>
+          <div className="pt-12">
+
+</div>
 
           <div className="ltr:text-right rtl:text-left">
             <button className="btn btn-dark  text-center">Submit</button>

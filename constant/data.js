@@ -429,43 +429,18 @@ export const menuItems = [
 
 export const topMenu = [
   {
-    title: "Project Management",
-    icon: "heroicons-outline:clipboard-document-list",
-    link: "/analytics",
-   
-  },
-  {
     title: "Client Management",
     icon: "heroicons-outline:user-circle",
-    link: "/invoice",
-    // child: [
-    //   {
-    //     childtitle: "Analytics Dashboard",
-    //     childlink: "dashboard",
-    //     childicon: "heroicons:presentation-chart-line",
-    //   },
-    //   {
-    //     childtitle: "Ecommerce Dashboard",
-    //     childlink: "ecommerce",
-    //     childicon: "heroicons:shopping-cart",
-    //   },
-    //   {
-    //     childtitle: "Project  Dashboard",
-    //     childlink: "project",
-    //     childicon: "heroicons:briefcase",
-    //   },
-    //   {
-    //     childtitle: "CRM Dashboard",
-    //     childlink: "crm",
-    //     childicon: "ri:customer-service-2-fill",
-    //   },
-    //   {
-    //     childtitle: "Banking Dashboard",
-    //     childlink: "banking",
-    //     childicon: "heroicons:wrench-screwdriver",
-    //   },
-    // ],
+    link: "/clients"
+  
   },
+  {
+    title: "admin Management",
+    icon: "heroicons-outline:clipboard-document-list",
+    link: "/admin-list",
+   
+  },
+ 
 
   // {
   //   title: "App",
@@ -974,6 +949,23 @@ export const files = [
     date: "06 June 2021 / 155MB",
   },
   {
+    img: "/assets/images/icon/file-1.svg",
+    title: "Dashboard.fig",
+    date: "06 June 2021 / 155MB",
+  },{
+    img: "/assets/images/icon/file-1.svg",
+    title: "Dashboard.fig",
+    date: "06 June 2021 / 155MB",
+  },{
+    img: "/assets/images/icon/file-1.svg",
+    title: "Dashboard.fig",
+    date: "06 June 2021 / 155MB",
+  },{
+    img: "/assets/images/icon/file-1.svg",
+    title: "Dashboard.fig",
+    date: "06 June 2021 / 155MB",
+  },
+  {
     img: "/assets/images/icon/pdf-1.svg",
     title: "Ecommerce.pdf",
     date: "06 June 2021 / 155MB",
@@ -995,4 +987,5 @@ export const files = [
   },
 ];
 
-export const isAdmin=true;
+export const title= 'Genius CRM'
+export const  decription= 'Genius Dashboard is a popular dashboard template.'

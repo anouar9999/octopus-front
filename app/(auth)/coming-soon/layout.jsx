@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Dashcode Next Js',
-  description: 'Dashcode is a popular dashboard template.',
+  title: 'Genius Dashboard Next Js',
+  description: 'Genius Dashboard is a popular dashboard template.',
 }
 
 const layout = ({ children }) => {

@@ -1,149 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import { configureStore } from "@reduxjs/toolkit";
 
 import { toast } from "react-toastify";
+import axios from "axios";
+import thunk from "redux-thunk";
 
 export const appTodoSlice = createSlice({
   name: "apptodo",
   initialState: {
-    todos: [
-      {
-        id: uuidv4(),
-        image: [
-          {
-            image: "/assets/images/avatar/av-1.svg",
-            label: "Mahedi Amin",
-            value: "mahedi",
-          },
-          {
-            image: "/assets/images/avatar/av-2.svg",
-            label: "Sovo Haldar",
-            value: "sovo",
-          },
-          {
-            image: "/assets/images/avatar/av-3.svg",
-            label: "Rakibul Islam",
-            value: "rakibul",
-          },
-        ],
-        title:
-          "laboriosam mollitia et enim quasi adipisci quia provident illum",
-        isDone: false,
-        isfav: false,
-        isTrash: false,
-        category: [
-          {
-            value: "team",
-            label: "team",
-          },
-        ],
-      },
-      {
-        id: uuidv4(),
-        image: [
-          {
-            image: "/assets/images/avatar/av-2.svg",
-            label: "Rakibul Islam",
-            value: "rakibul",
-          },
-        ],
-        title:
-          "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint.",
-        isDone: false,
-        isfav: true,
-        isTrash: false,
-        category: [
-          {
-            value: "low",
-            label: "low",
-          },
-        ],
-      },
-      {
-        id: uuidv4(),
-        image: [
-          {
-            image: "/assets/images/avatar/av-1.svg",
-            label: "Sovo Haldar",
-            value: "sovo",
-          },
-          {
-            image: "/assets/images/avatar/av-2.svg",
-            label: "Rakibul Islam",
-            value: "rakibul",
-          },
-        ],
-        title:
-          "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint.",
-        isDone: true,
-        isfav: true,
-        isTrash: false,
-        category: [
-          {
-            value: "medium",
-            label: "medium",
-          },
-          {
-            value: "low",
-            label: "low",
-          },
-        ],
-      },
-      {
-        id: uuidv4(),
-        image: [
-          {
-            image: "/assets/images/avatar/av-3.svg",
-            label: "Mahedi Amin",
-            value: "mahedi",
-          },
-          {
-            image: "/assets/images/avatar/av-4.svg",
-            label: "Sovo Haldar",
-            value: "sovo",
-          },
-          {
-            image: "/assets/images/avatar/av-1.svg",
-            label: "Rakibul Islam",
-            value: "rakibul",
-          },
-        ],
-        title: "illo expedita consequatur quia in",
-        isDone: false,
-        isfav: false,
-        isTrash: false,
-        category: [
-          {
-            value: "high",
-            label: "high",
-          },
-          {
-            value: "low",
-            label: "low",
-          },
-        ],
-      },
-      {
-        id: uuidv4(),
-        image: [
-          {
-            image: "/assets/images/avatar/av-4.svg",
-            label: "Rakibul Islam",
-            value: "rakibul",
-          },
-        ],
-        title: "illo expedita consequatur quia in",
-        isDone: false,
-        isfav: false,
-        isTrash: false,
-        category: [
-          {
-            value: "update",
-            label: "update",
-          },
-        ],
-      },
-    ],
+    todos: [],
     filter: "all",
     addModal: false,
     editModal: false,
@@ -153,67 +19,168 @@ export const appTodoSlice = createSlice({
     trashTodo: [],
     todoSearch: "",
     mobileTodoSidebar: false,
+    projectId: 0, // Rename id to projectId:0
+    taskId: 0,
   },
   reducers: {
     // open add modal
     openAddModal: (state, action) => {
-      state.addModal = action.payload;
+      state.addModal = action.payload.open;
+      state.projectId = action.payload.projectId
+   },
+    fetchTodos: async (state, action) => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${action.payload}/tasks/`
+        );
+        console.log("Todos fetched:", response.data);
+        state.todos = response.data;
+
+        return response.data;
+      } catch (error) {
+        console.error(
+          "Error fetching todos:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
+      }
     },
 
-    addTodo: (state, action) => {
-      state.todos.unshift(action.payload);
-      toast.success("Add Successfully", {
-        position: "top-right",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+    addTodo: async (state, action) => {
+      console.log(state.id);
+      const formData = new FormData();
+      formData.append("title", action.payload.title);
+      formData.append("category", action.payload.category);
+      formData.append("project_id", state.projectId);
+
+      try {
+        // Send a POST request to create a new task
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${state.projectId}/tasks/`,
+          formData
+        );
+        console.log("Task created:", response.data);
+        // Optionally, you can redirect or show a success message here
+        toast.success("Task create successfully", {
+          position: "top-right",
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error:", error.response.data);
+        throw error;
+      }
+      // state.todos.unshift(action.payload);
+      // toast.success("Add Successfully", {
+      //   position: "top-right",
+      //   autoClose: 1500,
+      //   hideProgressBar: false,
+      //   closeOnClick: true,
+      //   pauseOnHover: true,
+      //   draggable: true,
+      //   progress: undefined,
+      //   theme: "light",
+      // });
     },
     setFilter: (state, action) => {
       state.filter = action.payload;
     },
-    deleteTodo: (state, action) => {
-      state.todos = state.todos.filter((todo) => todo.id !== action.payload);
-      // store it into trash todo
-      state.trashTodo.unshift(action.payload);
 
-      toast.warning("Delete Successfully", {
-        position: "top-right",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+    setTodos(state, action) {
+      state.todos = action.payload;
+    },
+    deleteTodo: async (state, action) => {
+      try {
+        await axios.delete(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${action.payload}/delete/`
+        );
+        toast.error("Delete Successfully", {
+          position: "top-right",
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return taskId;
+      } catch (error) {
+        console.error(
+          "Error deleting task:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
+      }
     },
     editTodo: (state, action) => {
       state.todos.findIndex((item) => {
         if (item.id === action.payload.id) {
           state.editItem = item;
           state.editModal = !state.editModal;
-          // find index
-          let index = state.todos.indexOf(item);
-          state.todos.splice(index, 1, {
-            // give a id into eidtModalId
-            id: action.payload.id,
-            title: action.payload.title,
-            isDone: action.payload.isDone,
-            isfav: action.payload.isfav,
-            image: action.payload.image,
-            category: action.payload.category,
-          });
+          state.taskId = action.payload.id;
         }
       });
     },
     isCheck: (state, action) => {
+      const updateTaskIsDone = async (taskId, isDone) => {
+        console.log(isDone);
+        try {
+          const response = await axios.patch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/is_done/`,
+            { is_done: !isDone }
+          );
+          console.log("Task isDone updated:", response.data);
+
+          if (isDone === true) {
+            toast.warning("task need more Work", {
+              position: "top-right",
+              autoClose: 1500,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+          } else {
+            toast.warning("task Completed", {
+              position: "top-right",
+              autoClose: 1500,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+          }
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+
+          return response.data;
+        } catch (error) {
+          console.error(
+            "Error updating task isDone:",
+            error.response ? error.response.data : error.message
+          );
+          throw error;
+        }
+      };
       state.todos = state.todos.map((todo) =>
-        todo.id === action.payload ? { ...todo, isDone: !todo.isDone } : todo
+        todo.id === action.payload
+          ? updateTaskIsDone(todo.id, todo.is_done)
+          : todo
       );
     },
     isFaveCheck: (state, action) => {
@@ -246,5 +213,10 @@ export const {
   setSearch,
   toggleMobileTodoSidebar,
   closeEditModal,
+  setTodos,
+  projectId,
+  fetchTodos,
+  taskId,
 } = appTodoSlice.actions;
+
 export default appTodoSlice.reducer;

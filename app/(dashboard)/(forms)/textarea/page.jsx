@@ -88,6 +88,7 @@ const Textareapage = () => {
           label="Text input with formatter (on input)"
           id="formatter-pn"
           type="text"
+        
           placeholder="Enter your name"
           description="We will convert your name to lowercase instantly"
           onChange={handleFormatter}

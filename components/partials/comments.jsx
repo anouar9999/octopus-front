@@ -1,442 +1,328 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Icon } from '@iconify/react';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'react-toastify';
+import Card from '../ui/Card';
+import Textarea from '../ui/Textarea';
+import Button from '../ui/Button';
 
- const Comments = () => {
+const Comments = ({ projectId }) => {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [file, setFile] = useState(null);
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const userData = useSelector((state) => state.auth.userData);
+
+  useEffect(() => {
+    fetchComments();
+  }, [projectId]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/comments/`);
+      setComments(Array.isArray(response.data) ? response.data : []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      toast.error("Failed to load comments. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('project', projectId);
+    formData.append('text', newComment);
+    formData.append('user_id', userData?.user.id);
+
+    if (file) formData.append('file', file);
+    if (image) formData.append('image', image);
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/comments/add/`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      setComments([response.data, ...comments]);
+      setNewComment('');
+      setFile(null);
+      setImage(null);
+      toast.success("Comment posted successfully!");
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      toast.error("Failed to post comment. Please try again.");
+    }
+  };
+
   return (
-    <section class="bg-white dark:bg-gray-900 pt-8 lg:pt-16 antialiased">
-    <div class="max-w-2xl mx-auto px-4">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-lg lg:text-2xl font-bold text-gray-900 dark:text-white">
-         Commentaire  
-        </h2>
-      </div>
-      <form class="mb-6">
-        <div class="py-2 px-4 mb-4 bg-white rounded-lg rounded-t-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-          <label for="comment" class="sr-only">
-            Your comment
-          </label>
-          <textarea
-            id="comment"
-            rows="6"
-            class="px-0 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none dark:text-white dark:placeholder-gray-400 dark:bg-gray-800"
+    <Card className="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+      <div className="p-6">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Comments</h2>
+        <form onSubmit={handleCommentSubmit} className="mb-8 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <Textarea
+            className="w-full mb-4"
+            rows="4"
             placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
             required
-          ></textarea>
+          />
+          <div className="flex flex-wrap items-center gap-4">
+            <FileUploadButton setFile={setFile} accept="*/*" icon="heroicons-outline:paper-clip">
+              Attach File
+            </FileUploadButton>
+            <FileUploadButton setFile={setImage} accept="image/*" icon="heroicons-outline:photograph">
+              Attach Image
+            </FileUploadButton>
+            <Button type="submit" variant="primary" className="ml-auto">
+              Post Comment
+            </Button>
+          </div>
+          {(file || image) && (
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              {file && <p>File selected: {file.name}</p>}
+              {image && <p>Image selected: {image.name}</p>}
+            </div>
+          )}
+        </form>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <Icon icon="eos-icons:loading" className="w-8 h-8 animate-spin text-blue-500" />
+          </div>
+        ) : (
+          <AnimatePresence>
+            {comments.map((comment) => (
+              <motion.div
+                key={comment.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CommentItem comment={comment} projectId={projectId} fetchComments={fetchComments} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const CommentItem = ({ comment, projectId, fetchComments }) => {
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [newReply, setNewReply] = useState('');
+  const [replyFile, setReplyFile] = useState(null);
+  const [replyImage, setReplyImage] = useState(null);
+  const userData = useSelector((state) => state.auth.userData);
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('project', projectId);
+    formData.append('text', newReply);
+    formData.append('user_id', userData?.user.id);
+    formData.append('parent', comment.id);
+    if (replyFile) formData.append('file', replyFile);
+    if (replyImage) formData.append('image', replyImage);
+
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/comments/add/`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      setNewReply('');
+      setReplyFile(null);
+      setReplyImage(null);
+      setShowReplyForm(false);
+      fetchComments();
+      toast.success("Reply posted successfully!");
+    } catch (error) {
+      console.error("Error posting reply:", error);
+      toast.error("Failed to post reply. Please try again.");
+    }
+  };
+
+  const handleDeleteComment = () => {
+    axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/comments/${comment.id}/delete/`)
+      .then(() => {
+        fetchComments();
+        toast.success("Comment deleted successfully!");
+      })
+      .catch(error => {
+        console.error("There was an error deleting the comment!", error);
+        toast.error("Failed to delete comment. Please try again.");
+      });
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6 shadow-md border border-gray-200 dark:border-gray-700">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center">
+          <Avatar
+            src={comment.user?.avatar || "https://via.placeholder.com/40"}
+            alt={comment.user?.username || "Anonymous"}
+            size="md"
+          />
+          <div className="ml-4">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white">
+              {comment.user?.username || "Anonymous"}
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+            </p>
+          </div>
         </div>
-        <button
-          type="submit"
-          class="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800"
+        {(userData?.isAdmin || userData?.user?.id === comment.user?.id) && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteComment}
+            className="flex items-center"
+          >
+            <Icon icon="heroicons-outline:trash" className="w-4 h-4 mr-1" />
+            Delete
+          </Button>
+        )}
+      </div>
+      <p className="text-gray-700 dark:text-gray-300 mb-4">{comment.text}</p>
+      
+      <AttachmentDisplay comment={comment} />
+
+      <div className="flex items-center mt-4 space-x-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowReplyForm(!showReplyForm)}
+          className="flex items-center"
         >
-          Post comment
-        </button>
-      </form>
-      <article class="p-6 text-base bg-white rounded-lg dark:bg-gray-900">
-        <footer class="flex justify-between items-center mb-2">
-          <div class="flex items-center">
-            <p class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
-              <img
-                class="mr-2 w-6 h-6 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-2.jpg"
-                alt="Michael Gough"
-              />
-              Michael Gough
-            </p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              <time
-                pubdate
-                datetime="2022-02-08"
-                title="February 8th, 2022"
-              >
-                Feb. 8, 2022
-              </time>
-            </p>
-          </div>
-          <button
-            id="dropdownComment1Button"
-            data-dropdown-toggle="dropdownComment1"
-            class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 dark:text-gray-400 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-            type="button"
+          <Icon icon="heroicons-outline:reply" className="w-4 h-4 mr-1" />
+          Reply
+        </Button>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {comment.replies?.length || 0} replies
+        </span>
+      </div>
+
+      <AnimatePresence>
+        {showReplyForm && (
+          <motion.form
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            onSubmit={handleReplySubmit}
+            className="mt-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg"
           >
-            <svg
-              class="w-4 h-4"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 16 3"
-            >
-              <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
-            </svg>
-            <span class="sr-only">Comment settings</span>
-          </button>
-          <div
-            id="dropdownComment1"
-            class="hidden z-10 w-36 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-          >
-            <ul
-              class="py-1 text-sm text-gray-700 dark:text-gray-200"
-              aria-labelledby="dropdownMenuIconHorizontalButton"
-            >
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Edit
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Remove
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Report
-                </a>
-              </li>
-            </ul>
-          </div>
-        </footer>
-        <p class="text-gray-500 dark:text-gray-400">
-          Very straight-to-point article. Really worth time reading.
-          Thank you! But tools are just the instruments for the UX
-          designers. The knowledge of the design tools are as
-          important as the creation of the design strategy.
-        </p>
-        <div class="flex items-center mt-4 space-x-4">
-          <button
-            type="button"
-            class="flex items-center text-sm text-gray-500 hover:underline dark:text-gray-400 font-medium"
-          >
-            <svg
-              class="mr-1.5 w-3.5 h-3.5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 18"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 5h5M5 8h2m6-3h2m-5 3h6m2-7H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3v5l5-5h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1Z"
-              />
-            </svg>
-            Reply
-          </button>
+            <Textarea
+              className="w-full mb-4"
+              rows="3"
+              value={newReply}
+              onChange={(e) => setNewReply(e.target.value)}
+              placeholder="Write a reply..."
+              required
+            />
+            <div className="flex flex-wrap items-center gap-4">
+              <FileUploadButton setFile={setReplyFile} accept="*/*" icon="heroicons-outline:paper-clip">
+                Attach File
+              </FileUploadButton>
+              <FileUploadButton setFile={setReplyImage} accept="image/*" icon="heroicons-outline:photograph">
+                Attach Image
+              </FileUploadButton>
+              <Button type="submit" variant="primary" className="ml-auto">
+                Post Reply
+              </Button>
+            </div>
+            {(replyFile || replyImage) && (
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                {replyFile && <p>File selected: {replyFile.name}</p>}
+                {replyImage && <p>Image selected: {replyImage.name}</p>}
+              </div>
+            )}
+          </motion.form>
+        )}
+      </AnimatePresence>
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="mt-6 pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+          {comment.replies.map((reply) => (
+            <CommentItem key={reply.id} comment={reply} projectId={projectId} fetchComments={fetchComments} />
+          ))}
         </div>
-      </article>
-      <article class="p-6 mb-3 ml-6 lg:ml-12 text-base bg-white rounded-lg dark:bg-gray-900">
-        <footer class="flex justify-between items-center mb-2">
-          <div class="flex items-center">
-            <p class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
-              <img
-                class="mr-2 w-6 h-6 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                alt="Jese Leos"
-              />
-              Jese Leos
-            </p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              <time
-                pubdate
-                datetime="2022-02-12"
-                title="February 12th, 2022"
-              >
-                Feb. 12, 2022
-              </time>
-            </p>
-          </div>
-          <button
-            id="dropdownComment2Button"
-            data-dropdown-toggle="dropdownComment2"
-            class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 dark:text-gray-40 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-            type="button"
-          >
-            <svg
-              class="w-4 h-4"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 16 3"
-            >
-              <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
-            </svg>
-            <span class="sr-only">Comment settings</span>
-          </button>
-          <div
-            id="dropdownComment2"
-            class="hidden z-10 w-36 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-          >
-            <ul
-              class="py-1 text-sm text-gray-700 dark:text-gray-200"
-              aria-labelledby="dropdownMenuIconHorizontalButton"
-            >
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Edit
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Remove
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Report
-                </a>
-              </li>
-            </ul>
-          </div>
-        </footer>
-        <p class="text-gray-500 dark:text-gray-400">
-          Much appreciated! Glad you liked it ☺️
-        </p>
-        <div class="flex items-center mt-4 space-x-4">
-          <button
-            type="button"
-            class="flex items-center text-sm text-gray-500 hover:underline dark:text-gray-400 font-medium"
-          >
-            <svg
-              class="mr-1.5 w-3.5 h-3.5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 18"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 5h5M5 8h2m6-3h2m-5 3h6m2-7H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3v5l5-5h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1Z"
-              />
-            </svg>
-            Reply
-          </button>
-        </div>
-      </article>
-      <article class="p-6 mb-3 text-base bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-        <footer class="flex justify-between items-center mb-2">
-          <div class="flex items-center">
-            <p class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
-              <img
-                class="mr-2 w-6 h-6 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-3.jpg"
-                alt="Bonnie Green"
-              />
-              Bonnie Green
-            </p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              <time
-                pubdate
-                datetime="2022-03-12"
-                title="March 12th, 2022"
-              >
-                Mar. 12, 2022
-              </time>
-            </p>
-          </div>
-          <button
-            id="dropdownComment3Button"
-            data-dropdown-toggle="dropdownComment3"
-            class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 dark:text-gray-40 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-            type="button"
-          >
-            <svg
-              class="w-4 h-4"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 16 3"
-            >
-              <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
-            </svg>
-            <span class="sr-only">Comment settings</span>
-          </button>
-          <div
-            id="dropdownComment3"
-            class="hidden z-10 w-36 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-          >
-            <ul
-              class="py-1 text-sm text-gray-700 dark:text-gray-200"
-              aria-labelledby="dropdownMenuIconHorizontalButton"
-            >
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Edit
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Remove
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Report
-                </a>
-              </li>
-            </ul>
-          </div>
-        </footer>
-        <p class="text-gray-500 dark:text-gray-400">
-          The article covers the essentials, challenges, myths and
-          stages the UX designer should consider while creating the
-          design strategy.
-        </p>
-        <div class="flex items-center mt-4 space-x-4">
-          <button
-            type="button"
-            class="flex items-center text-sm text-gray-500 hover:underline dark:text-gray-400 font-medium"
-          >
-            <svg
-              class="mr-1.5 w-3.5 h-3.5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 18"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 5h5M5 8h2m6-3h2m-5 3h6m2-7H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3v5l5-5h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1Z"
-              />
-            </svg>
-            Reply
-          </button>
-        </div>
-      </article>
-      <article class="p-6 text-base bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-        <footer class="flex justify-between items-center mb-2">
-          <div class="flex items-center">
-            <p class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
-              <img
-                class="mr-2 w-6 h-6 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-4.jpg"
-                alt="Helene Engels"
-              />
-              Helene Engels
-            </p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              <time
-                pubdate
-                datetime="2022-06-23"
-                title="June 23rd, 2022"
-              >
-                Jun. 23, 2022
-              </time>
-            </p>
-          </div>
-          <button
-            id="dropdownComment4Button"
-            data-dropdown-toggle="dropdownComment4"
-            class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 dark:text-gray-40 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-            type="button"
-          >
-            <svg
-              class="w-4 h-4"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 16 3"
-            >
-              <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
-            </svg>
-          </button>
-          <div
-            id="dropdownComment4"
-            class="hidden z-10 w-36 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-          >
-            <ul
-              class="py-1 text-sm text-gray-700 dark:text-gray-200"
-              aria-labelledby="dropdownMenuIconHorizontalButton"
-            >
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Edit
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Remove
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Report
-                </a>
-              </li>
-            </ul>
-          </div>
-        </footer>
-        <p class="text-gray-500 dark:text-gray-400">
-          Thanks for sharing this. I do came from the Backend
-          development and explored some of the tools to design my
-          Side Projects.
-        </p>
-        <div class="flex items-center mt-4 space-x-4">
-          <button
-            type="button"
-            class="flex items-center text-sm text-gray-500 hover:underline dark:text-gray-400 font-medium"
-          >
-            <svg
-              class="mr-1.5 w-3.5 h-3.5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 18"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 5h5M5 8h2m6-3h2m-5 3h6m2-7H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3v5l5-5h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1Z"
-              />
-            </svg>
-            Reply
-          </button>
-        </div>
-      </article>
+      )}
     </div>
-  </section>
-  )
-}
+  );
+};
+
+const AttachmentDisplay = ({ comment }) => {
+  if (comment.image) {
+    return (
+      <div className="mb-4">
+        <img 
+          src={comment.image} 
+          alt="Comment attachment" 
+          className="max-w-xs rounded-lg border border-gray-200 dark:border-gray-600 hover:opacity-90 transition-opacity cursor-pointer"
+          onClick={() => window.open(comment.image, '_blank')}
+        />
+      </div>
+    );
+  } else if (comment.file) {
+    return (
+      <div className="mb-4">
+        <a
+          href={comment.file}
+          download
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <Icon icon="heroicons-outline:download" className="w-5 h-5 mr-2" />
+          Download Attachment
+        </a>
+      </div>
+    );
+  }
+  return null;
+};
+
+const FileUploadButton = ({ setFile, accept, children, icon }) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFile(file);
+      toast.success(`File "${file.name}" selected`);
+    }
+  };
+
+  return (
+    <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-700">
+      <Icon icon={icon} className="w-5 h-5 mr-2" />
+      {children}
+      <input type="file" className="hidden" onChange={handleFileChange} accept={accept} />
+    </label>
+  );
+};
+
+const Avatar = ({ src, alt, size = 'md', className = '' }) => {
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16'
+  };
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
+    />
+  );
+};
+
 export default Comments;

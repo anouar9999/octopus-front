@@ -20,6 +20,7 @@ const Textarea = ({
   description,
   cols,
   row = 3,
+  value,
   onChange,
   ...rest
 }) => {
@@ -48,6 +49,7 @@ const Textarea = ({
             id={id}
             cols={cols}
             rows={row}
+            defaultValue={value}
             onChange={onChange}
             {...rest}  // Spread other props here
             {...register}  // Spread register here
@@ -65,6 +67,7 @@ const Textarea = ({
     id={id}
     cols={cols}
     rows={row}
+    defaultValue={value}
     onChange={onChange}
     {...rest}  // Spread other props here
     {...register}  // Spread register here

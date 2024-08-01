@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Select, { components } from "react-select";
 import { useSelector, useDispatch } from "react-redux";
-import { updateProject, toggleEditModal } from "../../../../../store";
 import Textarea from "@/components/ui/Textarea";
 import Flatpickr from "react-flatpickr";
 import { useForm, Controller } from "react-hook-form";
@@ -12,9 +11,7 @@ import { toast } from "react-toastify";
 import FormGroup from "@/components/ui/FormGroup";
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
-import { Slider } from "@nextui-org/slider";
 import "./page.css";
-import DropZone from "@/components/partials/froms/DropZone";
 import axios from "axios";
 import Button from "@/components/ui/Button";
 

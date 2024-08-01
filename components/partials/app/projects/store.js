@@ -12,73 +12,7 @@ export const appProjectSlice = createSlice({
     editItem: {},
     companyID:null,
     editModal: false,
-    projects: [
-      {
-        id: uuidv4(),
-        assignee: [
-          {
-            image: "/assets/images/avatar/av-1.svg",
-            label: "Mahedi Amin",
-          },
-          {
-            image: "/assets/images/avatar/av-2.svg",
-            label: "Sovo Haldar",
-          },
-          {
-            image: "/assets/images/avatar/av-3.svg",
-            label: "Rakibul Islam",
-          },
-        ],
-        name: "Management Dashboard ",
-        des: "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint.",
-        startDate: "2022-10-03",
-        endDate: "2022-10-06",
-        progress: 75,
-        category: [
-          {
-            value: "team",
-            label: "team",
-          },
-          {
-            value: "low",
-            label: "low",
-          },
-        ],
-      },
-      {
-        id: uuidv4(),
-        assignee: [
-          {
-            image: "/assets/images/avatar/av-1.svg",
-            label: "Mahedi Amin",
-          },
-          {
-            image: "/assets/images/avatar/av-2.svg",
-            label: "Sovo Haldar",
-          },
-          {
-            image: "/assets/images/avatar/av-3.svg",
-            label: "Rakibul Islam",
-          },
-        ],
-        name: "Business Dashboard ",
-        des: "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint.",
-        startDate: "2022-10-03",
-        endDate: "2022-10-10",
-        progress: 50,
-
-        category: [
-          {
-            value: "team",
-            label: "team",
-          },
-          {
-            value: "low",
-            label: "low",
-          },
-        ],
-      },
-    ],
+ 
   },
   reducers: {
     toggleUploadImageModal: (state, action) => {

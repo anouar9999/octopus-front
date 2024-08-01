@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Select, { components } from "react-select";
 import { useSelector, useDispatch } from "react-redux";
-import { updateProject, toggleEditModal } from "../../../../../store";
 import Textarea from "@/components/ui/Textarea";
 import Flatpickr from "react-flatpickr";
 import { useForm, Controller } from "react-hook-form";

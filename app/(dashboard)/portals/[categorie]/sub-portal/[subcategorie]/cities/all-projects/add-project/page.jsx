@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Select, { components } from "react-select";
 import { useSelector, useDispatch } from "react-redux";
 // import { toggleAddModal, pushProject } from "../../../../store";
-import "../../../globals.css";
 
 import Flatpickr from "react-flatpickr";
 import { useForm, Controller } from "react-hook-form";

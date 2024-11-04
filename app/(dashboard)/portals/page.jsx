@@ -1,12 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Icon from "@/components/ui/Icon";
 
-import HomeBredCurbs from "@/components/partials/HomeBredCurbs";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import {
   openPortalModal,
@@ -16,12 +15,10 @@ import AddPortal from "@/components/partials/app/portals/AddPortals";
 import GridPortals from "@/components/partials/app/portals/GridPortals";
 import UpdatePortal from "@/components/partials/app/portals/updatePortals/UpdatePortals";
 
-const CardSlider = dynamic(() => import("@/components/partials/widget/CardSlider"), {
-  ssr: false,
-});
-
 const BankingPage = ({ params }) => {
   const [portals, setPortals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
   const userData = useSelector((state) => state.auth.userData);
@@ -33,95 +30,124 @@ const BankingPage = ({ params }) => {
 
   useEffect(() => {
     if (!userData?.companies?.[0]?.id) return;
-
-    const fetchPortals = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/categories/by-company/${userData.companies[0].id}/`
-        );
-        setPortals(response.data);
-      } catch (error) {
-        console.error("Error fetching portals:", error);
-        toast.error("Error fetching portals", {
-          position: "top-right",
-          autoClose: 1500,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      }
-    };
-
     fetchPortals();
   }, [userData]);
 
-  if (!isMounted) {
-    return null; // Avoid rendering during hydration
-  }
+  const fetchPortals = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/categories/by-company/${userData.companies[0].id}/`
+      );
+      setPortals(response.data);
+    } catch (error) {
+      console.error("Error fetching portals:", error);
+      toast.error("Error fetching portals", {
+        position: "top-right",
+        autoClose: 1500,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isMounted) return null;
+
+  const filteredPortals = portals.filter(portal => 
+    portal.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <>
-      <Breadcrumbs />
-      <h3 className="text-3xl font-bold text-gray-800 mb-6">Portals</h3>
-
-      <div className="flex items-center justify-center">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          {!portals.length && (
-            <div className="flex items-center justify-center">
-              <p className="text-lg text-gray-500">No portals available.</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-4">
+          <Breadcrumbs />
+          
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Icon icon="heroicons-outline:template" className="w-8 h-8 text-blue-500" />
+                Portals Management
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage and organize your portal structure
+              </p>
             </div>
-          )}
-          <p className="text-base font-light leading-relaxed text-gray-600 mb-4"></p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="frameworks-integration">
+
             {userData?.user?.is_admin && (
-              <article className="rounded-lg border border-gray-100 bg-white p-4 sm:p-6 shadow-sm transition hover:shadow-lg">
-                <a
-                  onClick={() => dispatch(openPortalModal({ open: true }))}
-                  className="grid mb-6 rounded-lg bg-white p-6 place-items-center rounded-xl bg-white px-3 py-2 transition-all hover:scale-105 hover:border-blue-gray-100 hover:bg-blue-gray-50 hover:bg-opacity-25"
-                  href="#"
-                >
-                  <span className="my-6 grid h-24 w-24 place-items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      x="0px"
-                      y="0px"
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M 11 2 L 11 11 L 2 11 L 2 13 L 11 13 L 11 22 L 13 22 L 13 13 L 22 13 L 22 11 L 13 11 L 13 2 Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <h5 className="text-sm capitalize font-semibold text-slate-900 inline-block pr-4 sm:pl-4">
-                    Add Portal
-                  </h5>
-                </a>
-              </article>
+              <button
+                onClick={() => dispatch(openPortalModal({ open: true }))}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+              >
+                <Icon icon="heroicons-outline:plus" className="w-5 h-5 mr-2" />
+                Add Portal
+              </button>
+            )}
+          </div>
+
+        
+        </div>
+
+        {/* Portals Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 mx-auto" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mx-auto" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredPortals.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Icon icon="heroicons-outline:template" className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No Portals Found
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {searchTerm ? "Try adjusting your search terms" : "Get started by creating your first portal"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {userData?.user?.is_admin && (
+              <button
+                onClick={() => dispatch(openPortalModal({ open: true }))}
+                className="relative group h-full min-h-[200px] rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex flex-col items-center justify-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              >
+                <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Icon icon="heroicons-outline:plus" className="w-8 h-8 text-blue-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Add New Portal
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Click to create a new portal
+                </p>
+              </button>
             )}
 
-            {portals.map((portal) => (
+            {filteredPortals.map((portal) => (
               <GridPortals
                 key={portal.id}
                 portal={portal}
                 link={`/portals/${portal.name}/sub-portal/`}
-                handleDelete={() =>
-                  dispatch(deletePortal({ categoryId: portal.id }))
-                }
+                handleDelete={() => dispatch(deletePortal({ categoryId: portal.id }))}
               />
             ))}
-
-            <AddPortal />
-            <UpdatePortal companyID={params.categorie} />
           </div>
-        </div>
+        )}
+
+        <AddPortal />
+        <UpdatePortal companyID={params.categorie} />
       </div>
-    </>
+    </div>
   );
 };
 

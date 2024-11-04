@@ -49,7 +49,7 @@ const Breadcrumbs = () => {
   };
 
   return (
-    <nav className="rounded-lg p-4 mb-5" aria-label="Breadcrumb">
+    <nav className="rounded-lg p-2 mb-6" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2 flex-wrap">
         <li className="inline-flex items-center">
           <a

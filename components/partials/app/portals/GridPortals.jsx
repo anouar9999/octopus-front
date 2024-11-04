@@ -28,24 +28,12 @@ const GridPortals = ({ portal, link, handleDelete, handleUpdate }) => {
       className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-md transition hover:shadow-lg hover:border-black-300 sm:p-6 md:p-8"
     >
       <div className="flex items-center justify-between mb-4">
-        <span className="inline-block rounded-full bg-blue-600 p-2 sm:p-3 text-white">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 sm:h-6 sm:w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M12 14l9-5-9-5-9 5z" />
-            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 14l9-5-9-5-9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-            />
-          </svg>
-        </span>
+      <div className="w-12 h-12 rounded-lg bg-blue-500 bg-opacity-10 flex items-center justify-center">
+              <Icon 
+                icon="heroicons-outline:template"
+                className="w-6 h-6 text-blue-500"
+              />
+            </div>
         {isAdmin && (
           <Dropdown
             classMenuItems="w-40"
@@ -77,15 +65,18 @@ const GridPortals = ({ portal, link, handleDelete, handleUpdate }) => {
 
       <p className="text-gray-600 mb-4 line-clamp-3 sm:text-base">{description}</p>
 
-      <div className="mt-auto pt-4 border-t border-gray-100">
+      <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
         <Link
           href={link}
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
         >
-          Find out more
-          <span className="ml-1 transition-transform duration-200 transform group-hover:translate-x-1">
-            &rarr;
-          </span>
+          <span>Find out More</span>
+          <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+            <Icon 
+              icon="heroicons-outline:arrow-right" 
+              className="w-4 h-4" 
+            />
+          </div>
         </Link>
       </div>
     </article>

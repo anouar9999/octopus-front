@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
       return <h1>Something went wrong. Please try again later.</h1>;
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 
@@ -93,19 +93,17 @@ const ProjectPostPage = () => {
             Project
           </h4>
           <div
-            className={`${
-              width < (breakpoints?.md ?? Infinity) ? "space-x-rb" : ""
-            } md:flex md:space-x-4 md:justify-end items-center rtl:space-x-reverse`}
+            className={`${width < (breakpoints?.md ?? Infinity) ? "space-x-rb" : ""
+              } md:flex md:space-x-4 md:justify-end items-center rtl:space-x-reverse`}
           >
             <Button
               icon="heroicons:list-bullet"
               text="List view"
               disabled={isLoaded}
-              className={`${
-                filler === "list"
+              className={`${filler === "list"
                   ? "bg-slate-900 dark:bg-slate-700  text-white"
                   : " bg-white dark:bg-slate-800 dark:text-slate-300"
-              }   h-min text-sm font-normal`}
+                }   h-min text-sm font-normal`}
               iconClass=" text-lg"
               onClick={() => setfiller("list")}
             />
@@ -113,11 +111,10 @@ const ProjectPostPage = () => {
               icon="heroicons-outline:view-grid"
               text="Grid view"
               disabled={isLoaded}
-              className={`${
-                filler === "grid"
+              className={`${filler === "grid"
                   ? "bg-slate-900 dark:bg-slate-700 text-white"
                   : " bg-white dark:bg-slate-800 dark:text-slate-300"
-              }   h-min text-sm font-normal`}
+                }   h-min text-sm font-normal`}
               iconClass=" text-lg"
               onClick={() => setfiller("grid")}
             />

@@ -2,28 +2,26 @@
 
 import React, { useEffect, useState } from "react";
 import Dropdown from "@/components/ui/Dropdown";
-// import menu form headless ui
 import { Menu } from "@headlessui/react";
 import Icon from "@/components/ui/Icon";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
-
-const ProjectGrid = ({ project ,param}) => {
-  const { id ,title, progress, tag, members, assign, des, start_date, end_date } =
-    project;
+const ProjectGrid = ({ project, param }) => {
+  const { id, title, progress, tag, members, assign, des, start_date, end_date } = project;
   const dispatch = useDispatch();
-  const reload = useRouter();
+  const router = useRouter();
   const userData = useSelector((state) => state.auth.userData);
+  const isAdmin = userData?.user?.is_admin || false;
 
   const [start, setStart] = useState(new Date(start_date));
   const [end, setEnd] = useState(new Date(end_date));
   const [totaldays, setTotaldays] = useState(3);
-  const isAdmin = userData?.user?.is_admin || false;
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const diffTime = Math.abs(end - start);
@@ -31,17 +29,15 @@ const ProjectGrid = ({ project ,param}) => {
     setTotaldays(diffDays);
   }, [start, end]);
 
-  const router = useRouter();
-  // handleClick to view project single page
   const handleClick = (projectId) => {
     router.push(`/admin-portal/${param.id}/${param.categorie}/sub-portal/${param.subcategorie}/cities/all-projects/${param.city}/edit-project/${projectId}/`);
   };
+
   const deleteProject = async (projectId) => {
     try {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/delete/${projectId}/`);
       if (response.status === 204) {
-        console.log('Project deleted successfully');
-        toast.error("Project deleted  successfully", {
+        toast.error("Project deleted successfully", {
           position: "top-right",
           autoClose: 1500,
           hideProgressBar: false,
@@ -51,115 +47,121 @@ const ProjectGrid = ({ project ,param}) => {
           progress: undefined,
           theme: "light",
         });
-       setTimeout(() => {
-        window.location.reload();
-       }, 1600);
-      } else {
-        console.error('Error deleting project:', response.data);
-        // Handle the error according to your application's requirements
+        setTimeout(() => {
+          window.location.reload();
+        }, 1600);
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error);
-      // Handle the error according to your application's requirements
+      toast.error("Failed to delete project");
     }
   };
 
+  const getStatusColor = (progress) => {
+    if (progress >= 80) return "bg-green-500";
+    if (progress >= 40) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
   return (
-    <div class="mb-6 rounded-lg bg-white p-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <div>
-            <Link href={isAdmin ? 
-              `/admin-portal/${param.id}/${param.categorie}/sub-portal/${param.subcategorie}/cities/all-projects/${param.city}/single-project/${id}`:
-              `/portals/${param.categorie}/sub-portal/${param.subcategorie}/cities/all-projects/${param.city}/single-project/${id}`}>
-              <h6 className="leading-tight text-gray-900">
-                {title}{""}
-              </h6>
-            </Link>
-            <span class="block text-xs text-gray-500"></span>
-          </div>
-        </div>
-        {isAdmin && (
-          <div>
+    <motion.div
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href={isAdmin ? 
+            `/admin-portal/${param.id}/${param.categorie}/sub-portal/${param.subcategorie}/cities/all-projects/${param.city}/single-project/${id}` :
+            `/portals/${param.categorie}/sub-portal/${param.subcategorie}/cities/all-projects/${param.city}/single-project/${id}`}
+            className="flex-1"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-blue-600 transition-colors">
+              {title}
+            </h2>
+          </Link>
+
+          {isAdmin && (
             <Dropdown
-              classMenuItems=" w-[130px]"
+              classMenuItems="w-[130px]"
               label={
-                <span className=" font-sans text-lg inline-flex flex-col items-center justify-center h-8 w-8 rounded-full bg-gray-500-f7 dark:bg-slate-900 dark:text-slate-400">
-                  <Icon icon="heroicons-outline:dots-vertical" />
+                <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                  <Icon icon="heroicons-outline:dots-vertical" className="text-gray-600 dark:text-gray-300" />
                 </span>
               }
             >
-              <div>
-                <div>
-                  <Menu.Item onClick={() => handleClick(id)}>
-                    <div
-                      className="hover:bg-slate-900 dark:hover:bg-slate-600 dark:hover:bg-opacity-70 hover:text-white
-                 w-full border-b border-b-gray-500 border-opacity-10   px-4 py-2 text-sm dark:text-slate-300  last:mb-0 cursor-pointer first:rounded-t last:rounded-b flex  space-x-2 items-center
-                   capitalize rtl:space-x-reverse"
-                    >
-                      <span className="text-base">
-                        <Icon icon="heroicons-outline:pencil-alt" />
-                      </span>
-                      <span>Edit</span>
-                    </div>
-                  </Menu.Item>
-                  <Menu.Item
-                    onClick={() =>deleteProject(id)}
-                  >
-                    <div
-                      className="hover:bg-slate-900 dark:hover:bg-slate-600 dark:hover:bg-opacity-70 hover:text-white
-                 w-full border-b border-b-gray-500 border-opacity-10   px-4 py-2 text-sm dark:text-slate-300  last:mb-0 cursor-pointer first:rounded-t last:rounded-b flex  space-x-2 items-center
-                   capitalize rtl:space-x-reverse"
-                    >
-                      <span className="text-base">
-                        <Icon icon="heroicons-outline:trash" />
-                      </span>
-                      <span>Delete</span>
-                    </div>
-                  </Menu.Item>
+              <Menu.Item onClick={() => handleClick(id)}>
+                <div className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <Icon icon="heroicons-outline:pencil-alt" className="mr-2 h-4 w-4" />
+                  <span>Edit</span>
                 </div>
-              </div>
+              </Menu.Item>
+              <Menu.Item onClick={() => deleteProject(id)}>
+                <div className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                  <Icon icon="heroicons-outline:trash" className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </div>
+              </Menu.Item>
             </Dropdown>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className="flex space-x-4 rtl:space-x-reverse mt-3 ">
-        <div class="card__body mt-2">
-          <div className="flex flex-wrap gap-3 mb-2">
-            <div className="flex items-center space-x-2 bg-blue-100 dark:bg-blue-900 rounded-full px-3 py-1">
-              <Icon icon="heroicons-outline:calendar" className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">{start_date}</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-red-100 dark:bg-red-900 rounded-full px-3 py-1">
-              <Icon icon="heroicons-outline:calendar" className="w-4 h-4 text-red-600 dark:text-red-400" />
-              <span className="text-sm font-medium text-red-800 dark:text-red-200">{end_date}</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-yellow-100 dark:bg-yellow-900 rounded-full px-3 py-1">
-              <Icon icon="heroicons-outline:exclamation" className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">High Priority</span>
-            </div>
+        {/* Dates and Priority */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+            <Icon icon="heroicons-outline:calendar" className="w-3 h-3 mr-1" />
+            {start_date}
+          </span>
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+            <Icon icon="heroicons-outline:calendar" className="w-3 h-3 mr-1" />
+            {end_date}
+          </span>
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+            <Icon icon="heroicons-outline:exclamation" className="w-3 h-3 mr-1" />
+            High Priority
+          </span>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{progress}%</span>
+          </div>
+          <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <motion.div
+              className={`h-full rounded-full ${getStatusColor(progress)}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+            <span className="inline-flex items-center">
+              <Icon icon="heroicons-outline:clock" className="w-4 h-4 mr-1" />
+              {totaldays} days left
+            </span>
+            <motion.div 
+              animate={{ scale: isHovered ? 1.1 : 1 }}
+              className={`px-2 py-1 rounded-md text-xs font-medium ${
+                totaldays <= 3 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 
+                totaldays <= 7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 
+                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+              }`}>
+              {totaldays <= 3 ? 'Due Soon' : totaldays <= 7 ? 'Upcoming' : 'On Track'}
+            </motion.div>
           </div>
         </div>
       </div>
-      <div className="my-4">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{progress}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div 
-            className="bg-green-600 h-2.5 rounded-full transition-all duration-500 ease-out" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
-
-      <div className="flex justify-end items-center  text-sm font-medium text-gray-500 dark:text-gray-400">
-        <Icon icon="heroicons-outline:clock" className="w-4 h-4 mr-1" />
-        <span>{totaldays} days left</span>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 

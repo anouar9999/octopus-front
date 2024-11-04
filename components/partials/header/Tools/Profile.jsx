@@ -9,7 +9,17 @@ import Button from "@/components/ui/Button";
 import { isAdmin } from "@/constant/data";
 import {userData } from '@/components/partials/auth/store';
 
+const AvatarLetter = ({ username }) => {
+  const firstLetter = username?.charAt(0)?.toUpperCase() || '';
 
+  return (
+    <div className="flex-1 ltr:mr-[10px] rtl:ml-[10px]">
+      <div className="lg:h-8 lg:w-8 h-7 w-7 rounded-full bg-[#074e78] text-white flex items-center justify-center">
+        <span className="text-sm font-medium">{firstLetter}</span>
+      </div>
+    </div>
+  );
+};
 
 const ProfileLabel = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -28,16 +38,13 @@ const ProfileLabel = () => {
     <div className="flex items-center">
       <div className="flex-1 ltr:mr-[10px] rtl:ml-[10px]">
         <div className="lg:h-8 lg:w-8 h-7 w-7 rounded-full">
-          <img
-            src="/assets/images/all-img/user.png"
-            alt="User profile"
-            className="block w-full h-full object-cover rounded-full"
-          />
+        <AvatarLetter username={userData?.user?.username} />
+
         </div>
       </div>
-      <div className="flex-none text-slate-600 dark:text-white text-sm font-normal items-center lg:flex hidden overflow-hidden text-ellipsis whitespace-nowrap">
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap w-[85px] block">
-          {userData?.user?.fullname || "No name available"}
+      <div className="flex-none text-[#0B77B7]  text-sm font-normal items-center lg:flex hidden overflow-hidden text-ellipsis whitespace-nowrap">
+        <span className="overflow-hidden text-ellipsis  whitespace-nowrap w-[85px] block">
+          {userData?.user?.username || "No name available"}
         </span>
         <span className="text-base inline-block ltr:ml-[10px] rtl:mr-[10px]">
           <Icon icon="heroicons-outline:chevron-down" />
@@ -135,7 +142,7 @@ const Profile = () => {
                   <span className="block text-xl ltr:mr-3 rtl:ml-3">
                     <Icon icon={item.icon} />
                   </span>
-                  <span className="block text-sm">{item.label}</span>
+                  <span className="block text-sm text-[#0B77B7]">{item.label}</span>
                 </div>
               </div>
             </div>

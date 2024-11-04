@@ -1,114 +1,88 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import HomeBredCurbs from "@/components/partials/HomeBredCurbs";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { Plus, MapPin } from "lucide-react";
 import {
   openPortalModal,
-  deleteSubPortal,
-  editPortalModel,
-  deleteCity,
   editCityModel,
 } from "@/components/partials/app/portals/store";
-import AddPortal from "@/components/partials/app/portals/AddPortals";
-import AddSubPortal from "@/components/partials/app/portals/AddSubPortal";
-import GridPortals from "@/components/partials/app/portals/GridPortals";
-import UpdateSubPortal from "@/components/partials/app/portals/updatePortals/UpdateSubPortal";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
-import UpdateCity from "@/components/partials/app/portals/updatePortals/UpdateCity";
+import { toast } from "react-toastify";
 import AddCity from "@/components/partials/app/portals/AddCity";
-import ListCity from "@/components/partials/app/portals/ListCity";
 import AddRegion from "@/components/partials/app/portals/AddRegion";
-
-const CardSlider = dynamic(
-  () => import("@/components/partials/widget/CardSlider"),
-  {
-    ssr: false,
-  }
-);
+import UpdateCity from "@/components/partials/app/portals/updatePortals/UpdateCity";
+import ListCity from "@/components/partials/app/portals/ListCity";
 
 const SubPortalPage = ({ params }) => {
-  const [Subportals, setSubPortals] = useState([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const [subPortals, setSubPortals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const dispatch = useDispatch();
   const router = useRouter();
   const userData = useSelector((state) => state.auth.userData);
-  const [Open, setOpen] = useState();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const fetchPortals = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/subcategories/${params.subcategorie}/cities/`
-        );
-        setSubPortals(response.data);
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      }
-    };
-    fetchPortals();
-  }, [params.subcategorie]);
-
-  if (!isMounted) {
-    return null; // Avoid rendering during hydration
-  }
-
   const isAdmin = userData?.user?.is_admin || false;
 
+  useEffect(() => {
+    fetchCities();
+  }, [params.subcategorie]);
+
+  const fetchCities = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/subcategories/${params.subcategorie}/cities/`
+      );
+      setSubPortals(response.data);
+    } catch (error) {
+      toast.error("Failed to load cities");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Cities and Regions</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Breadcrumbs />
 
-      <div className="flex items-center justify-center">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          {!Subportals.length && (
-            <div className="flex items-center justify-center">
-              <p className="text-lg text-gray-500">No cities available.</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-[#0b77b7]" />
+                Cities Management
+              </h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Manage and organize your cities structure
+              </p>
             </div>
-          )}
-          <p className="text-base font-light leading-relaxed text-gray-600 mb-4"></p>
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-            id="frameworks-integration"
-          >
-            {isAdmin && (
-              <article className="rounded-lg flex justify-between border border-gray-200 bg-white p-4 sm:p-6 shadow-sm transition hover:shadow-lg">
-                <button
-                  onClick={() => dispatch(openPortalModal({ open: true, categoryId: params.categorie }))}
-                  className="w-full text-left transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <div className="flex flex-col justify-between items-center">
-                    <span className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-blue-100">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8 text-blue-600"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12 4a1 1 0 011 1v6h6a1 1 0 110 2h-6v6a1 1 0 11-2 0v-6H5a1 1 0 110-2h6V5a1 1 0 011-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Ajouter une Ville
-                    </h2>
-                  </div>
-                </button>
-              </article>
-            )}
 
-            {Subportals.map((portal) => (
+            {isAdmin && (
+              <button
+                onClick={() => dispatch(openPortalModal({ open: true, categoryId: params.categorie }))}
+                className="inline-flex items-center px-4 py-2 bg-[#0b77b7] hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add City
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Cities Grid */}
+        {loading ? (
+          <CitiesSkeleton />
+        ) : subPortals.length === 0 ? (
+          <EmptyState 
+            isAdmin={isAdmin}
+            onAdd={() => dispatch(openPortalModal({ open: true, categoryId: params.categorie }))}
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {subPortals.map((portal) => (
               <ListCity
                 key={portal.id}
                 portal={portal}
@@ -119,15 +93,57 @@ const SubPortalPage = ({ params }) => {
                 }}
               />
             ))}
-
-            <AddCity SubCategorieID={params.subcategorie} />
-            <AddRegion />
-            <UpdateCity />
           </div>
-        </div>
+        )}
       </div>
-    </>
+
+      {/* Modals */}
+      <AddCity SubCategorieID={params.subcategorie} />
+      <AddRegion />
+      <UpdateCity />
+    </div>
   );
 };
+
+const EmptyState = ({ isAdmin, onAdd }) => (
+  <div className="text-center py-12">
+    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+      <MapPin className="w-8 h-8 text-[#0b77b7]" />
+    </div>
+    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      No Cities Found
+    </h3>
+    <p className="text-gray-500 dark:text-gray-400 mb-4">
+      {isAdmin 
+        ? "Get started by creating your first city"
+        : "No cities are available at the moment"
+      }
+    </p>
+    {isAdmin && (
+      <button
+        onClick={onAdd}
+        className="inline-flex items-center px-4 py-2 bg-[#0b77b7] hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+      >
+        <Plus className="w-5 h-5 mr-2" />
+        Add City
+      </button>
+    )}
+  </div>
+);
+
+const CitiesSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {[...Array(8)].map((_, index) => (
+      <div
+        key={index}
+        className="animate-pulse bg-white dark:bg-gray-800 rounded-xl p-6"
+      >
+        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4" />
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+      </div>
+    ))}
+  </div>
+);
 
 export default SubPortalPage;

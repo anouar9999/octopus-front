@@ -58,8 +58,8 @@ const ImageWithIcons = ({ src, isAdmin, onDelete, onComment, onInfo, onClick }) 
   </div>
 );
 
-const EmptyState = ({ type, isAdmin, onUpload }) => (
-  <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+const   EmptyState = ({ type, isAdmin, onUpload }) => (
+  <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg ">
     {type === 'image' ? <Image className="w-16 h-16 text-gray-400 mb-4" /> : <File className="w-16 h-16 text-gray-400 mb-4" />}
     <p className="text-lg font-semibold text-gray-700 mb-2">No {type === 'image' ? 'images' : 'files'} uploaded yet</p>
     <p className="text-sm text-gray-500 text-center mb-4">
@@ -250,13 +250,15 @@ const Gallery = ({ projectId, StageName }) => {
             const fileName = getFileName(file);
             return (
               <div key={i} className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative">
-                <button
-                  onClick={() => handleFileDelete(file.id)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-600 transition-colors duration-200"
-                  aria-label="Delete file"
-                >
-                  <Trash2 size={18} />
-                </button>
+             {
+              isAdmin &&    <button
+              onClick={() => handleFileDelete(file.id)}
+              className="absolute top-2 right-2 text-red-500 hover:text-red-600 transition-colors duration-200"
+              aria-label="Delete file"
+            >
+              <Trash2 size={18} />
+            </button>
+             }
                 <div className="mb-3">
                   {getFileIcon(fileName)}
                 </div>

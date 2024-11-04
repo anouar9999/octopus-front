@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useDarkMode from "@/hooks/useDarkMode";
 import { useSelector } from "react-redux";
+import "@/app/globals.css";
 
 const Logo = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -28,20 +29,28 @@ const Logo = () => {
 
       {/* "X" */}
       {userData?.user?.is_admin ? (
-        <div> <a className="flex-shrink-0">
+        <div className="flex items-center"> 
+        <a className="flex-shrink-0">
         <img
           src={logoSrc}
           alt="Company Logo"
-          width={56} // reduced width
+          width={50} // reduced width
           height={80} // reduced height
           className="object-contain"
         />
-      </a></div>
+      </a>
+      <div className="text-3xl px-3" >X</div>
+      <h1 className="text-2xl font-custom ">Octopus</h1>
+      </div>
       ) : (
         <>
-
+ <div className="flex items-center"> 
           {/* Second logo */}
-          <a className="flex-shrink-0 w-32">
+      
+        
+      <h1 className="text-2xl font-custom ">Octopus</h1>
+      <div className="text-3xl px-3" >X</div>
+      <a className="flex-shrink-0 w-32">
             <img
               src={companyLogoSrc}
               alt="User Company Logo"
@@ -50,6 +59,7 @@ const Logo = () => {
               className="object-contain"
             />
           </a>
+          </div>
         </>
       )}
     </div>

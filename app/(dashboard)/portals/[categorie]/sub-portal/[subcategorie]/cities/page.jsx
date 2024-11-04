@@ -23,6 +23,7 @@ import AddCity from "@/components/partials/app/portals/AddCity";
 import ListCity from "@/components/partials/app/portals/ListCity";
 import AddRegion from "@/components/partials/app/portals/AddRegion";
 import { toast } from "react-toastify";
+import Icons from "@/components/ui/Icon";
 
 const CardSlider = dynamic(() => import("@/components/partials/widget/CardSlider"), {
   ssr: false,
@@ -87,9 +88,18 @@ const SubPortalPage = ({ params }) => {
 
   return (
     <>
-      <HomeBredCurbs title="Cities and Regions" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+     
+      
       <Breadcrumbs />
-
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Icons icon="heroicons-outline:template" className="w-8 h-8 text-blue-500" />
+                Cities and Regions Management
+              </h1>
+              <p className="mt-2 pl-4 text-gray-600 dark:text-gray-400">
+                Manage and organize your Cities and Regions structure
+              </p>
       <div className="flex items-center justify-center">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {!subPortals.length && (
@@ -99,7 +109,7 @@ const SubPortalPage = ({ params }) => {
           )}
           <p className="text-base font-light leading-relaxed text-gray-600 mb-4"></p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="frameworks-integration">
-         
+    
 
             {subPortals.map((portal) => (
               <ListCity
@@ -118,6 +128,8 @@ const SubPortalPage = ({ params }) => {
             {/* <UpdateCity /> */}
           </div>
         </div>
+      </div>
+      </div>
       </div>
     </>
   );

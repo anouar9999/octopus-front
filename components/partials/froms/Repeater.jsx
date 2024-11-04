@@ -12,7 +12,7 @@ const Repeater = () => {
   });
 
   const generatePassword = () => {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@";
     return Array.from({ length: 12 }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
   };
 
@@ -82,11 +82,11 @@ const Repeater = () => {
             </div>
           </div>
         ))}
-        <div className="mt-4">
+        <div className="mt-4 mx-auto flex justify-center">
           <Button
             text="Add New Member"
             icon="plus"
-            className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md transition duration-200 ease-in-out"
+            className="  text-[#0b77b7] px-4 py-2 rounded-md transition duration-200 ease-in-out"
             onClick={() => {
               const newMemberName = `New Member ${fields.length + 1}`;
               append({

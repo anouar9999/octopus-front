@@ -101,99 +101,112 @@ const ProjectPage = ({ params: { projectId } }) => {
   };
 
   return (
-    <div className=" min-h-screen py-2 ">
+    <div className=" min-h-screen py-2 px-4 ">
       <ToastContainer />
       <Breadcrumbs />
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="bg-gradient-to-r from-slate-900 to-cyan-900 rounded-xl shadow-2xl mb-8 overflow-hidden">
-          <div className="p-8 text-white">
-            <h1 className="text-4xl text-white font-bold mb-4">
-              {project.title}
-            </h1>
-            <div className="flex items-center mb-4">
-              <div className="w-64 bg-gray-200 rounded-full mr-4">
-                <div
-                  className="bg-green-500 text-xs font-medium text-green-100 text-center p-1 leading-none rounded-full"
-                  style={{ width: `${project.progress}%` }}
-                >
-                  {project.progress}% Complete
-                </div>
-              </div>
-              <span className="text-sm text-gray-300">
-                <span className="font-bold">{project.progress}%</span> completed
-                activity
-              </span>
+      <div className="grid lg:grid-cols-3 gap-6 p-6">
+    {/* Project Info - Left Column */}
+    <div className="lg:col-span-2">
+      <div className="flex flex-col h-full">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{project.title}</h1>
+            <div className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-800 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">Active</span>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <span className="px-3 py-1 bg-blue-500 rounded-full text-sm">
-                Starts:{" "}
-                <span className="font-semibold">{project.start_date}</span>
-              </span>
-              <span className="px-3 py-1 bg-red-500 rounded-full text-sm">
-                Ends: <span className="font-semibold">{project.end_date}</span>
-              </span>
-              <span className="px-3 py-1 bg-yellow-500 rounded-full text-sm">
-                Status: <span className="font-semibold">High Priority</span>
-              </span>
-            </div>
-          </div>
-          <div className="bg-gray-800 p-4 text-right">
-      
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <Card className="col-span-1 lg:col-span-2 bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
-            <div className="">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white flex items-center">
-                <Icon
-                  icon="heroicons-outline:location-marker"
-                  className="w-6 h-6 mr-2 text-green-500"
-                />
-                Localisation
-              </h2>
-              <div className="h-60 rounded-2xl overflow-hidden shadow-inner">
-              <BasicMap 
-              // 
-  link={`${project.location}`}
-  zoom={15}
-  popupContent={
-    <div>
-      <p>Your location is here !</p>
+        {/* Progress Section */}
+        <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-gray-700 dark:text-gray-300">Overall Progress</span>
+            <div className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-800">
+              <span className="font-semibold text-blue-700 dark:text-blue-300">{project.progress}%</span>
+            </div>
+          </div>
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                project.progress >= 80 
+                  ? 'bg-green-500' 
+                  : project.progress >= 40 
+                    ? 'bg-blue-500' 
+                    : 'bg-red-500'
+              }`}
+              style={{ width: `${project.progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Project Meta */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-800 flex items-center justify-center">
+                <Icon icon="heroicons-outline:calendar" className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Start Date</div>
+                <div className="font-medium text-gray-900 dark:text-white">{project.start_date}</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-800 flex items-center justify-center">
+                <Icon icon="heroicons-outline:clock" className="w-5 h-5 text-red-600 dark:text-red-300" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">End Date</div>
+                <div className="font-medium text-gray-900 dark:text-white">{project.end_date}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex-grow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-800 flex items-center justify-center">
+              <Icon icon="heroicons-outline:document-text" className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Description</h3>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{project.description}</p>
+        </div>
+      </div>
     </div>
-  }
-/>
-              </div>
-            </div>
-          </Card>
 
-          <Card className="col-span-1 bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
-            <div className="">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white flex items-center">
-                <svg
-                  className="w-6 h-6 mr-2 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>{" "}
-                Description
-              </h2>
-              {/* Add a timeline component here */}
-              <div className="space-y-4">{project.description}</div>
-            </div>
-          </Card>
+    {/* Map - Right Column */}
+    <div className="lg:col-span-1">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 h-full">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-800 flex items-center justify-center">
+            <Icon icon="heroicons-outline:location-marker" className="w-5 h-5 text-green-600 dark:text-green-300" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
         </div>
+        <div className="rounded-xl overflow-hidden h-[calc(100%-4rem)]">
+        <BasicMap 
+              
+              link={`${project.location}`}
+              zoom={15}
+              popupContent={
+                <div>
+                  <p>Your location is here !</p>
+                </div>
+              }
+            />
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <Card className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
+        <div className=" dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
   <div className="p-4 sm:p-6">
     <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
       Project Details
@@ -251,7 +264,7 @@ const ProjectPage = ({ params: { projectId } }) => {
       </Tab.Panels>
     </Tab.Group>
   </div>
-</Card>
+</div>
       </div>
     </div>
   );

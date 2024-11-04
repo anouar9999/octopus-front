@@ -6,19 +6,21 @@ import useWidth from "@/hooks/useWidth";
 import ProjectGrid from "@/components/partials/app/projects/ProjectGrid";
 import ProjectList from "@/components/partials/app/projects/ProjectList";
 import { ToastContainer } from "react-toastify";
-import './page.css'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import axios from "axios";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { motion, AnimatePresence } from "framer-motion";
+import { Icon } from "@iconify/react";
 
 const ProjectPostPage = ({ params }) => {
-  const [filler, setfiller] = useState("grid");
-  const { width, breakpoints } = useWidth();
+  const [viewMode, setViewMode] = useState("grid");
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter()
-  const dispatch = useDispatch();
   const [projects, setProjects] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setIsMounted(true);
@@ -26,6 +28,7 @@ const ProjectPostPage = ({ params }) => {
 
   const fetchProjects = async () => {
     try {
+      setIsLoaded(false);
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/?region_name=${params.city}`);
       const projectsData = response.data.map(project => ({
         id: project.id,
@@ -38,9 +41,9 @@ const ProjectPostPage = ({ params }) => {
         assign: project.assign,
       }));
       setProjects(projectsData);
-      setIsLoaded(true);
     } catch (error) {
       console.error('There was an error fetching the projects:', error);
+    } finally {
       setIsLoaded(true);
     }
   };
@@ -49,59 +52,126 @@ const ProjectPostPage = ({ params }) => {
     fetchProjects();
   }, [params.city]);
 
-  if (!isMounted) {
-    return null; // Avoid rendering during hydration
-  }
+  if (!isMounted) return null;
+
+  const filteredProjects = projects.filter(project => 
+    project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedFilter === "all" || project.tag === selectedFilter)
+  );
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <ToastContainer />
-      
-      <div className="flex flex-wrap justify-between items-center mb-4">
-        <h4 className="text-3xl font-bold text-gray-800 mb-4">
-          Projets récents
-        </h4>
-      </div>
-      <Breadcrumbs />
+      <Breadcrumbs className="mt-2" />
 
-      {!isLoaded && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
-      )}
+      {/* Header Section */}
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Icon icon="heroicons-outline:clipboard-list" className="w-8 h-8 text-blue-500" />
+                Projects in {params.city}
+              </h1>
+            </div>
 
-      {isLoaded && filler === "grid" && (
-        <div className="grid sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-3">
-          <a
+            <button
               onClick={() => router.push(`/admin-portal/${params.id}/${params.categorie}/sub-portal/${params.subcategorie}/cities/all-projects/${params.city}/add-project`)}
-              className="grid mb-6 rounded-lg bg-white p-6 place-items-center rounded-xl border border-blue-gray-50 bg-white px-3 py-2 transition-all hover:scale-105 hover:border-blue-gray-100 hover:bg-blue-gray-50 hover:bg-opacity-25 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
-              <span className="my-6 grid h-24 w-24 place-items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M 11 2 L 11 11 L 2 11 L 2 13 L 11 13 L 11 22 L 13 22 L 13 13 L 22 13 L 22 11 L 13 11 L 13 2 Z"
-                  ></path>
-                </svg>
-              </span>
-              <h5 className="text-sm capitalize font-semibold text-slate-900 inline-block ltr:pr-4 rtl:pl-4">
-                Ajouter un projet
-              </h5>
-            </a>
-          {projects.map((project, projectIndex) => (
-            <ProjectGrid project={project} key={projectIndex} param={params} />
-          ))}
-        </div>
-      )}
+              <Icon icon="heroicons-outline:plus" className="w-5 h-5 mr-2" />
+              Create New Project
+            </button>
+          </div>
 
-      {isLoaded && filler === "list" && (
-        <ProjectList projects={projects} />
-      )}
+          {/* Filters and Search */}
+          {/* <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Icon icon="heroicons-outline:search" className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg ${
+                  viewMode === "grid" 
+                    ? "bg-blue-50 text-blue-500 dark:bg-blue-900/20"
+                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Icon icon="heroicons-outline:view-grid" className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-lg ${
+                  viewMode === "list"
+                    ? "bg-blue-50 text-blue-500 dark:bg-blue-900/20"
+                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Icon icon="heroicons-outline:view-list" className="w-5 h-5" />
+              </button>
+            </div>
+          </div> */}
+        </div>
+
+        {/* Loading State */}
+        {!isLoaded && (
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-4 text-gray-500 dark:text-gray-400">Loading projects...</p>
+          </div>
+        )}
+
+        {/* Projects Grid */}
+        <AnimatePresence mode="wait">
+          {isLoaded && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {filteredProjects.length === 0 ? (
+                <div className="text-center py-12">
+                  <Icon icon="heroicons-outline:document" className="w-16 h-16 mx-auto text-gray-400" />
+                  <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">No Projects Found</h3>
+                  <p className="mt-2 text-gray-500 dark:text-gray-400">
+                    {searchTerm ? "Try adjusting your search terms" : "Start by adding your first project"}
+                  </p>
+                </div>
+              ) : (
+                <div className={viewMode === "grid" 
+                  ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                  : "space-y-4"
+                }>
+                  {filteredProjects.map((project, index) => (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      {viewMode === "grid" ? (
+                        <ProjectGrid project={project} param={params} />
+                      ) : (
+                        <ProjectList project={project} param={params} />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
